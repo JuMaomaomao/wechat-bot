@@ -1,10 +1,3 @@
-#!/usr/bin/env -S node --no-warnings --loader ts-node/esm
-/**
- * Wechaty - Conversational RPA SDK for Chatbot Makers.
- *  - https://github.com/wechaty/wechaty
- */
-// https://stackoverflow.com/a/42817956/1123955
-// https://github.com/motdotla/dotenv/issues/89#issuecomment-587753552
 import 'dotenv/config.js'
 
 import {
@@ -17,10 +10,17 @@ import {
 
 import qrcodeTerminal from 'qrcode-terminal'
 
+// 登录
+function onLogin(user: Contact) {
+    log.info('StarterBot', '%s login', user)
+}
+
+// 退出登录
 function onLogout(user: Contact) {
     log.info('StarterBot', '%s logout', user)
 }
 
+// 扫码
 function onScan(qrcode: string, status: ScanStatus) {
     if (status === ScanStatus.Waiting || status === ScanStatus.Timeout) {
         const qrcodeImageUrl = [
@@ -36,18 +36,21 @@ function onScan(qrcode: string, status: ScanStatus) {
     }
 }
 
-function onLogin(user: Contact) {
-    log.info('StarterBot', '%s login', user)
-}
-
+// 收到信息
 async function onMessage(msg: Message) {
     log.info('StarterBot', msg.toString())
-
-    if (msg.text() === 'ding') {
-        await msg.say('dong')
+    const contact = msg.talker() // 信息的发送者
+    const text = msg.text() // 信息的内容
+    const room = msg.room() // 信息来自的群聊，如果不是来自群聊则返回null
+    if (room) { // 群聊信息
+        const topic = await room.topic() // 群名称
+        console.log(`群聊: ${topic} 联系人: ${contact.name()} 文字内容: ${text}`)
+    } else { // 个人消息
+        console.log(`联系人: ${contact.name()} 文字内容: ${text}`)
     }
 }
 
+// 初始化机器人
 const bot = WechatyBuilder.build({
     name: 'maidKK',
     puppet: 'wechaty-puppet-wechat'
@@ -57,11 +60,13 @@ const bot = WechatyBuilder.build({
     // }
 })
 
+// 绑定事件
 bot.on('scan', onScan)
 bot.on('login', onLogin)
 bot.on('logout', onLogout)
 bot.on('message', onMessage)
 
+// 启动机器人
 bot.start()
     .then(() => log.info('StarterBot', 'Starter Bot Started.'))
     .catch(e => log.error('StarterBot', e))
