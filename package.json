@@ -1,0 +1,21 @@
+{
+  "name": "wechat-bot",
+  "version": "1.0.0",
+  "description": "微信聊天机器人",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/JuMaomaomao/wechat-bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "wechaty": "^1.0.6",
+    "wechaty-puppet-wechat": "^1.0.1"
+  }
+}
