@@ -8,3 +8,4 @@
 
 1.  wechaty中文文档：https://wechaty.gitbook.io/wechaty/v/zh/
 2.  微信对话开放平台：https://openai.weixin.qq.com/
+3.  Wechaty的入门项目模板：https://github.com/wechaty/getting-started
