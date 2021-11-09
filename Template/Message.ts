@@ -1,43 +1,12 @@
 import 'dotenv/config.js'
 import { FileBox } from 'file-box'
 import {
-    Contact,
     Message,
-    ScanStatus,
-    WechatyBuilder,
     log,
-    UrlLink,
-    MiniProgram
 } from 'wechaty'
 
-import qrcodeTerminal from 'qrcode-terminal'
-import { WechatyWeixinOpenAI } from 'wechaty-weixin-openai'
-
-// 登录
-function onLogin(user: Contact) {
-    log.info('StarterBot', '%s login', user)
-}
-
-// 退出登录
-function onLogout(user: Contact) {
-    log.info('StarterBot', '%s logout', user)
-}
-
-// 扫码
-function onScan(qrcode: string, status: ScanStatus) {
-    if (status === ScanStatus.Waiting || status === ScanStatus.Timeout) {
-        const qrcodeImageUrl = ['https://wechaty.js.org/qrcode/', encodeURIComponent(qrcode)].join('')
-        log.info('StarterBot', 'onScan: %s(%s) - %s', ScanStatus[status], status, qrcodeImageUrl)
-        // 控制台展示二维码
-        qrcodeTerminal.generate(qrcode, { small: true })
-
-    } else {
-        log.info('StarterBot', 'onScan: %s(%s)', ScanStatus[status], status)
-    }
-}
-
 // 收到信息
-const processCommonMaterial = async function onMessage(msg: Message) {
+async function onMessage(msg: Message) {
     log.info('StarterBot', msg.toString())
     // 信息的发送者
     const contact = msg.talker()
@@ -52,45 +21,27 @@ const processCommonMaterial = async function onMessage(msg: Message) {
     if (room) { // 群聊信息
         const topic = await room.topic() // 群名称
         console.log(`群聊: ${topic} 联系人: ${contact.name()} 信息内容: ${text}`)
-
-        const preAnswerHook = async (message: Message) => {
-            const isCommonMaterial = await processCommonMaterial(message)
-            if (isCommonMaterial) {
-                return false
-            }
-        }
-
-        // 接入微信开放对话平台处理群信息
-        bot.use(WechatyWeixinOpenAI({
-            token: "",
-            encodingAESKey: "",
-            preAnswerHook
-        }))
-
     } else { // 否则为 个人消息
         console.log(`联系人: ${contact.name()} 信息内容: ${text}`)
 
         // 回复信息
         // 1、回复 图片
-        if (/^photo$/i.test(msg.text())) {
+        if (/^ding$/i.test(msg.text())) {
             const fileBox = FileBox.fromUrl('https://chatie.io/wechaty/images/bot-qr-code.png')
             await msg.say(fileBox)
-            return true
         }
         // 2、回复 文字
-        if (/^text$/i.test(msg.text())) {
-            await msg.say('当匹配到text时，我就会回复这句话')
-            return true
+        if (/^dong$/i.test(msg.text())) {
+            await msg.say('dingdingding')
         }
         // 3、回复 联系人
-        if (/^风满楼$/i.test(msg.text())) {
-            const contactCard = await bot.Contact.find({ name: '风满楼' })
+        if (/^lijiarui$/i.test(msg.text())) {
+            const contactCard = await bot.Contact.find({ name: 'lijiarui' })
             if (!contactCard) {
-                console.log('未找到')
+                console.log('not found')
                 return
             }
             await msg.say(contactCard)
-            return true
         }
         // 4、回复 URl链接
         if (/^link$/i.test(msg.text())) {
@@ -101,11 +52,10 @@ const processCommonMaterial = async function onMessage(msg: Message) {
                 url: 'https://github.com/wechaty/wechaty',
             });
             await msg.say(urlLink);
-            return true
         }
         // 5、回复小程序
         if (/^mini-program$/i.test(msg.text())) {
-            const miniProgram = new MiniProgram({
+            const miniProgram = new MiniProgram ({
                 appid: 'gh_0aa444a25adc',
                 title: '我正在使用Authing认证身份，你也来试试吧',
                 pagePath: 'routes/explore.html',
@@ -113,7 +63,6 @@ const processCommonMaterial = async function onMessage(msg: Message) {
                 thumbKey: '42f8609e62817ae45cf7d8fefb532e83',
             });
             await msg.say(miniProgram);
-            return true
         }
     }
 
@@ -146,7 +95,7 @@ const processCommonMaterial = async function onMessage(msg: Message) {
     const targetRoom = await bot.Room.find({ topic: '要转发的群名称' })
     if (targetRoom) {
         await msg.forward(targetRoom)
-        console.log('转发了一条信息到xx群!')
+        console.log('forward this message to wechaty room!')
     }
 
     // 发送信息的时间
@@ -167,27 +116,4 @@ const processCommonMaterial = async function onMessage(msg: Message) {
     // 在缓存里找信息
     // msg.find()
     // msg.findAll()
-
-    return false
 }
-
-// 初始化机器人
-const bot = WechatyBuilder.build({
-    name: 'maidKK',
-    puppet: 'wechaty-puppet-wechat'
-    // puppet: 'wechaty-puppet-service'
-    // puppetOptions: {
-    //   token: 'xxx',
-    // }
-})
-
-// 绑定事件
-bot.on('scan', onScan)
-bot.on('login', onLogin)
-bot.on('logout', onLogout)
-bot.on('message', onMessage)
-
-// 启动机器人
-bot.start()
-    .then(() => log.info('StarterBot', 'Starter Bot Started.'))
-    .catch(e => log.error('StarterBot', e))
