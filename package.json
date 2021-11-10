@@ -16,6 +16,7 @@
   "dependencies": {
     "qrcode-terminal": "^0.12.0",
     "wechaty": "^1.0.6",
-    "wechaty-puppet-wechat": "^1.0.1"
+    "wechaty-puppet-wechat": "^1.0.1",
+    "wechaty-weixin-openai": "^0.2.10"
   }
 }
