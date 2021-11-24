@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.24.0",
     "qrcode-terminal": "^0.12.0",
     "wechaty": "^1.0.6",
     "wechaty-puppet-wechat": "^1.0.1",
