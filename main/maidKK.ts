@@ -11,7 +11,6 @@ import {
 } from 'wechaty'
 
 import qrcodeTerminal from 'qrcode-terminal'
-import { WechatyWeixinOpenAI } from 'wechaty-weixin-openai'
 import { MiniProgramImpl, UrlLinkImpl } from 'wechaty/impls'
 
 import { api1, api2 } from '../request/api'
@@ -60,14 +59,18 @@ async function onMessage(msg: Message) {
     if (room) { // 群聊信息
         const topic = await room.topic() // 群名称
         console.log(`群聊: ${topic} 联系人: ${contact.name()} 信息内容: ${text}`)
+    } else { // 否则为 个人消息
+        console.log(`联系人: ${contact.name()} 信息内容: ${text}`)
+        // 判断信息是不是机器人自己发出的
+        if (msg.self()) return
         interface p1 {
             userid: string
         }
         let params1:p1 = {
             userid: '112123'
         }
+        // 请求signtrue
         api1(params1).then((res: any) => {
-            // success
             interface p2 {
                 signature: string;
                 query: string;
@@ -76,33 +79,25 @@ async function onMessage(msg: Message) {
                 signature: res.signature,
                 query: text
             }
+            // 请求对话
             api2(params2).then((res: any) => {
-                // success
-                console.log(res.msg)
+                console.log(res)
+                if(res && res.msg && res.msg[0] && res.msg[0].content) {
+                    msg.say(res.msg[0].content)
+                }
             }).catch((error) => {
-                // error
                 console.log(error)
             })
         }).catch((error) => {
-            // error
             console.log(error)
         })
 
-    } else { // 否则为 个人消息
-        console.log(`联系人: ${contact.name()} 信息内容: ${text}`)
-        // 2、回复 文字
-        if (/^text$/i.test(msg.text())) {
-            await msg.say('当匹配到text时，我就会回复这句话')
-        }
-
-        // 调用api接口，并且提供了两个参数
-        api1("").then(res => {
-            // success
-            console.log(res)
-        }).catch((error) => {
-            // error
-            console.log(error)
-        })
+        // 获取撤回的信息
+        // if (msg.type() === bot.Message.Type.Recalled) {
+        //     const recalledMessage = await msg.toRecalled()
+        //     console.log(`撤回的信息为: ${recalledMessage}`)
+        //     msg.say(`我知道你撤回的什么哦——${recalledMessage}`)
+        // }
     }
 }
 
