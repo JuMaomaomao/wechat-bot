@@ -1,35 +1,30 @@
 import 'dotenv/config.js'
-import { FileBox } from 'file-box'
 import {
     Contact,
     Message,
     ScanStatus,
     WechatyBuilder,
     log,
-    UrlLink,
-    MiniProgram
 } from 'wechaty'
 
 import qrcodeTerminal from 'qrcode-terminal'
-import { MiniProgramImpl, UrlLinkImpl } from 'wechaty/impls'
 
-import { api1, api2 } from '../request/api'
+import { aibot } from '../request/api'
 
-const openAIAppid = 'XAdRQrKjSzZIw03'
-const openAIToken = '3hB39sV2LD2kJBQn26VGqkCpcjB7bx'
-const openAIEncodingAESKey = 'dfhxxoN5bPvcHq3bdBlaSCdkOmFklWNdqwMZrz3NMHg'
+/* ------------------------------ 定义参数 ------------------------------ */
+let signature: string = "" // 微信对话开放平台bot对话能力所需签名
 
-// 登录
+/* ------------------------------ 登录 ------------------------------ */
 function onLogin(user: Contact) {
-	log.info('StarterBot', '%s login', user)
+    log.info('登陆成功', '%s login', user)
 }
 
-// 退出登录
+/* ------------------------------ 退出登录 ------------------------------ */
 function onLogout(user: Contact) {
-	log.info('StarterBot', '%s logout', user)
+    log.info('退出登录', '%s logout', user)
 }
 
-// 扫码
+/* ------------------------------ 扫码 ------------------------------ */
 function onScan(qrcode: string, status: ScanStatus) {
     if (status === ScanStatus.Waiting || status === ScanStatus.Timeout) {
         const qrcodeImageUrl = ['https://wechaty.js.org/qrcode/', encodeURIComponent(qrcode)].join('')
@@ -42,10 +37,9 @@ function onScan(qrcode: string, status: ScanStatus) {
     }
 }
 
-// 收到信息
-// const processCommonMaterial = async function onMessage(msg: Message) {
+/* ------------------------------ 收到信息 ------------------------------ */
 async function onMessage(msg: Message) {
-    log.info('StarterBot', msg.toString())
+    log.info('收到信息', msg.toString())
     // 信息的发送者
     const contact = msg.talker()
     // 信息的接收者
@@ -61,63 +55,47 @@ async function onMessage(msg: Message) {
         console.log(`群聊: ${topic} 联系人: ${contact.name()} 信息内容: ${text}`)
     } else { // 否则为 个人消息
         console.log(`联系人: ${contact.name()} 信息内容: ${text}`)
-        // 判断信息是不是机器人自己发出的
+        // return掉机器人自己发出的信息
         if (msg.self()) return
-        interface p1 {
-            userid: string
-        }
-        let params1:p1 = {
-            userid: '112123'
-        }
-        // 请求signtrue
-        api1(params1).then((res: any) => {
-            interface p2 {
-                signature: string;
-                query: string;
-            }
-            let params2:p2 = {
-                signature: res.signature,
-                query: text
-            }
-            // 请求对话
-            api2(params2).then((res: any) => {
-                console.log(res)
-                if(res && res.msg && res.msg[0] && res.msg[0].content) {
-                    msg.say(res.msg[0].content)
-                }
-            }).catch((error) => {
-                console.log(error)
-            })
-        }).catch((error) => {
-            console.log(error)
-        })
-
         // 获取撤回的信息
-        // if (msg.type() === bot.Message.Type.Recalled) {
+        // if (msg.type() === bot.Message.Type.Recalled && msg.type() === bot.Message.Type.Text) {
         //     const recalledMessage = await msg.toRecalled()
         //     console.log(`撤回的信息为: ${recalledMessage}`)
         //     msg.say(`我知道你撤回的什么哦——${recalledMessage}`)
         // }
+
+        // 接入微信对话开放平台
+        // interface p { signature: string; query: string; }
+        // let params: p = { signature: signature, query: text }
+
+        // 请求对话
+        aibot(text).then((res: any) => {
+            if (res && res.msg && res.msg[0] && res.msg[0].content) {
+                msg.say(res.msg[0].content)
+            }
+        }).catch((error) => {
+            console.log(error)
+        })
     }
 }
 
-// 初始化机器人
+/* ------------------------------ 初始化机器人 ------------------------------ */
 const bot = WechatyBuilder.build({
-	name: 'maidKK',
-	puppet: 'wechaty-puppet-wechat',
-	// puppet: 'wechaty-puppet-service'
-	// puppetOptions: {
-	//   token: 'xxx',
-	// }
+    name: 'maidKK',
+    puppet: 'wechaty-puppet-wechat',
+    // puppet: 'wechaty-puppet-service'
+    // puppetOptions: {
+    //   token: 'xxx',
+    // }
 })
 
-// 绑定事件
+/* ------------------------------ 机器人绑定事件 ------------------------------ */
 bot.on('scan', onScan)
 bot.on('login', onLogin)
 bot.on('logout', onLogout)
 bot.on('message', onMessage)
 
-// 启动机器人
+/* ------------------------------ 启动机器人 ------------------------------ */
 bot.start()
-	.then(() => log.info('StarterBot', 'Starter Bot Started.'))
-	.catch((e) => log.error('StarterBot', e))
+    .then(() => log.info('机器人启动成功', 'Starter Bot Started.'))
+    .catch((e) => log.error('机器人启动失败', e))
